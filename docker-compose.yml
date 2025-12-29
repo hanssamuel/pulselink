@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    container_name: pulselink_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pulselink_db
+      POSTGRES_USER: pulselink
+      POSTGRES_PASSWORD: pulselink_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pulselink_pg:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: pulselink_api
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./apps/api:/app
+
+volumes:
+  pulselink_pg:
