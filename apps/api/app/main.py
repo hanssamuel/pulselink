@@ -1,8 +1,12 @@
 from fastapi import FastAPI, Request
 from jose import jwt, JWTError
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.db.session import SessionLocal, engine
 from app.db.base import Base
 from app.models.audit import AuditLog
@@ -11,6 +15,9 @@ from app.routers.ekg import router as ekg_router
 
 
 app = FastAPI(title="PulseLink API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 app.include_router(auth_router)
 app.include_router(ekg_router)
 def try_get_user_id(request: Request) -> int | None:
